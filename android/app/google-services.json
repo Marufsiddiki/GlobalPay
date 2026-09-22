@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "862033563632",
+    "project_id": "globalpay-86e49",
+    "storage_bucket": "globalpay-86e49.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:862033563632:android:3bff94782c2a901e8d5735",
+        "android_client_info": {
+          "package_name": "com.example.globalpay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaYgvzoejf49XKqnYTh6hdrB5LemXvzfg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
