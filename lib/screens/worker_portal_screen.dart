@@ -368,20 +368,19 @@ class _WorkerPortalScreenState extends State<WorkerPortalScreen> {
   }
 
   Widget _documentsPage(Worker? worker) {
-    final documents = worker?.documents ?? const <String>[];
+    final documents = worker?.uploadedDocuments ?? const [];
     if (documents.isEmpty) {
       return _emptyPage(
         icon: Icons.folder_open_outlined,
         title: 'No documents available',
-        message:
-            'There are no documents listed on your worker profile. Document upload and verification are not set up in this version.',
+        message: 'Your company has not attached any documents to your profile yet.',
       );
     }
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         const Text(
-          'Documents listed on your profile',
+          'Documents shared with your profile',
           style: TextStyle(color: muted),
         ),
         const SizedBox(height: 12),
@@ -394,24 +393,32 @@ class _WorkerPortalScreenState extends State<WorkerPortalScreen> {
                   const Icon(Icons.description_outlined, color: green),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      document,
-                      style: const TextStyle(
-                        color: ink,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          document.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: ink,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${document.type} · Uploaded ${_date(document.uploadedAt)}',
+                          style: const TextStyle(color: muted, fontSize: 12),
+                        ),
+                      ],
                     ),
                   ),
-                  const Icon(Icons.info_outline, color: muted, size: 20),
+                  const SizedBox(width: 8),
+                  const StatusBadge(text: 'Uploaded'),
                 ],
               ),
             ),
           ),
-        const SizedBox(height: 8),
-        const Text(
-          'Document files, review statuses and administrator feedback are not available in the current app data.',
-          style: TextStyle(color: muted, height: 1.45),
-        ),
       ],
     );
   }

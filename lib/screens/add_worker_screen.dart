@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../models/document.dart';
 import '../models/worker.dart';
 import '../services/app_state.dart';
 import '../widgets/app_scaffold.dart';
@@ -23,7 +28,12 @@ class _AddWorkerState extends State<AddWorkerScreen> {
   String _country = 'Bangladesh';
   String _engagementType = 'Employee';
   String? _error;
+  String? _uploadingType;
+  final Map<String, PayrollDocument> _uploadedDocuments = {};
   bool _saving = false;
+
+  static const _documentTypes = ['National ID', 'Tax Form', 'Contract'];
+  static const _allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg'];
 
   @override
   void dispose() {
@@ -52,17 +62,75 @@ class _AddWorkerState extends State<AddWorkerScreen> {
               engagementType: _engagementType,
               complianceStatus: 'Compliant',
               salary: double.parse(_salary.text.replaceAll(',', '').trim()),
-              documents: const [],
+              documents: _uploadedDocuments.values
+                  .map((document) => document.name)
+                  .toList(),
+              uploadedDocuments: _uploadedDocuments.values.toList(),
             ),
             temporaryPassword: _password.text,
           );
       if (mounted) Navigator.pop(context);
     } on AuthException catch (error) {
       setState(() => _error = error.message);
+    } on PlatformException catch (error) {
+      setState(() {
+        _error =
+            'Could not save the worker and documents: ${error.message ?? error.code}';
+      });
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
+
+  Future<void> _pickDocument(String type) async {
+    setState(() {
+      _uploadingType = type;
+      _error = null;
+    });
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: _allowedExtensions,
+      );
+      if (!mounted) return;
+      if (result.isEmpty) return;
+      final file = result.single;
+      final bytes = await file.readAsBytes();
+      if (!mounted) return;
+      if (bytes.isEmpty) {
+        setState(() => _error = 'Could not read the selected file.');
+        return;
+      }
+      final extension = file.extension?.toLowerCase();
+      if (extension == null || !_allowedExtensions.contains(extension)) {
+        setState(() => _error = 'Choose a PDF, PNG, or JPG file.');
+        return;
+      }
+      final document = PayrollDocument(
+        id: 'document-${DateTime.now().microsecondsSinceEpoch}',
+        name: file.name,
+        type: type,
+        mimeType: _mimeType(extension),
+        contentBase64: base64Encode(bytes),
+        uploadedAt: DateTime.now(),
+      );
+      setState(() => _uploadedDocuments[type] = document);
+    } on PlatformException catch (error) {
+      if (mounted) {
+        setState(() {
+          _error = 'Could not select the file: ${error.message ?? error.code}';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingType = null);
+    }
+  }
+
+  String _mimeType(String extension) => switch (extension) {
+        'pdf' => 'application/pdf',
+        'png' => 'image/png',
+        _ => 'image/jpeg',
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +240,30 @@ class _AddWorkerState extends State<AddWorkerScreen> {
               ),
             ),
             const SizedBox(height: 14),
+            SurfaceCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Secure documents',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Attach a National ID, Tax Form, or Contract (PDF, PNG, JPG).',
+                    style: TextStyle(color: muted, fontSize: 13),
+                  ),
+                  const SizedBox(height: 10),
+                  for (final type in _documentTypes) _documentPicker(type),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Documents are stored with this local demo profile. Do not upload real identity or tax documents.',
+                    style: TextStyle(color: muted, fontSize: 12, height: 1.4),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
             const SurfaceCard(
               child: Text(
                 'Payroll-ready status is a demo setting only. Verify local tax, worker classification, identity documents, and bank details before any real-world payroll.',
@@ -189,6 +281,71 @@ class _AddWorkerState extends State<AddWorkerScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _documentPicker(String type) {
+    final document = _uploadedDocuments[type];
+    final isUploading = _uploadingType == type;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed:
+                  _saving || isUploading ? null : () => _pickDocument(type),
+              style: OutlinedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                alignment: Alignment.centerLeft,
+                shape: const StadiumBorder(),
+                side: BorderSide(
+                  color: document == null ? const Color(0xFFE2E4E7) : green,
+                ),
+                backgroundColor: document == null ? Colors.white : mint,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    document == null
+                        ? Icons.add_circle_outline
+                        : Icons.check_circle_outline,
+                    color: document == null ? muted : green,
+                    size: 19,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      isUploading
+                          ? 'Selecting $type...'
+                          : document?.name ?? 'Upload $type',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: document == null ? ink : green,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  if (document == null)
+                    const Icon(Icons.upload_file_outlined,
+                        color: muted, size: 19),
+                ],
+              ),
+            ),
+          ),
+          if (document != null)
+            IconButton(
+              tooltip: 'Remove $type',
+              onPressed: _saving
+                  ? null
+                  : () => setState(() => _uploadedDocuments.remove(type)),
+              icon: const Icon(Icons.close, size: 18),
+              visualDensity: VisualDensity.compact,
+            ),
+        ],
       ),
     );
   }

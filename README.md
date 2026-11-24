@@ -29,7 +29,8 @@ creates visible `Paid (demo)` records only; no money is transferred.
    welcome page.
 2. Select **Add Worker**. Enter the worker's name, unique email, country, role,
    engagement type, monthly salary, and a temporary password (at least 8
-   characters). Share the worker login details with them securely.
+   characters). Attach a National ID, Tax Form, and Contract as PDF, PNG, or JPG
+   files if available. Share the worker login details with them securely.
 3. Enter every new worker's monthly salary in USD. Country remains worker
    information and does not change application currency.
 4. Select **Run Payroll**. Only compliant workers with salaries verified in USD
@@ -41,6 +42,8 @@ creates visible `Paid (demo)` records only; no money is transferred.
 1. Sign in with the worker demo account or the account created by the admin.
 2. Use the Worker portal's **Home**, **Salary**, **Payments**, **Documents**, and
    **Profile** tabs to view the signed-in worker's available local demo data.
+   Uploaded documents appear in the admin Documents Center and in that worker's
+   Documents tab.
 3. Salary and payment history are read-only. Payment records are filtered by the
    signed-in worker's ID. Missing profile fields and records are shown as
    unavailable or as empty states rather than being fabricated.
@@ -57,9 +60,11 @@ secure server-side authentication. Do not enter real personal, financial, or
 payroll data. Before production use, connect a secured backend, enforce
 server-side tenant and role authorization, implement secure password recovery,
 and integrate a regulated payment provider and jurisdiction-specific payroll
-and compliance services. Worker documents are currently profile-listed names
-only; uploads, download links, review statuses, notifications, and editable
-worker profile fields are not connected in this local demo.
+and compliance services. Uploaded document bytes are stored in local app
+preferences for this demo only; they are not encrypted, backed up, or protected
+by server access rules. Do not upload real identity, tax, or contract files.
+Secure document storage, previews/downloads, review statuses, notifications,
+and editable worker profile fields require a production backend.
 
 ## USD currency policy
 

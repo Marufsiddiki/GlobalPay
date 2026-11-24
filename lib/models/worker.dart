@@ -1,4 +1,5 @@
 import 'currency.dart';
+import 'document.dart';
 
 class Worker {
   final String id;
@@ -14,6 +15,7 @@ class Worker {
   final double? legacySalaryAmount;
   final String? legacySalaryCurrency;
   final List<String> documents;
+  final List<PayrollDocument> uploadedDocuments;
 
   const Worker({
     this.id = '',
@@ -29,6 +31,7 @@ class Worker {
     this.legacySalaryAmount,
     this.legacySalaryCurrency,
     required this.documents,
+    this.uploadedDocuments = const [],
   });
 
   bool get hasVerifiedUsdSalary => salaryCurrency == 'USD';
@@ -47,6 +50,7 @@ class Worker {
     double? legacySalaryAmount,
     String? legacySalaryCurrency,
     List<String>? documents,
+    List<PayrollDocument>? uploadedDocuments,
   }) =>
       Worker(
         id: id ?? this.id,
@@ -62,6 +66,7 @@ class Worker {
         legacySalaryAmount: legacySalaryAmount ?? this.legacySalaryAmount,
         legacySalaryCurrency: legacySalaryCurrency ?? this.legacySalaryCurrency,
         documents: documents ?? this.documents,
+        uploadedDocuments: uploadedDocuments ?? this.uploadedDocuments,
       );
 
   Map<String, dynamic> toMap() => {
@@ -78,6 +83,8 @@ class Worker {
         'legacySalaryAmount': legacySalaryAmount,
         'legacySalaryCurrency': legacySalaryCurrency,
         'documents': documents,
+        'uploadedDocuments':
+            uploadedDocuments.map((document) => document.toMap()).toList(),
       };
 
   factory Worker.fromMap(Map<String, dynamic> map) {
@@ -105,6 +112,13 @@ class Worker {
       legacySalaryAmount: legacyAmount,
       legacySalaryCurrency: legacyCurrency,
       documents: List<String>.from(map['documents'] ?? const []),
+      uploadedDocuments: (map['uploadedDocuments'] as List<dynamic>? ?? [])
+          .map(
+            (item) => PayrollDocument.fromMap(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList(),
     );
   }
 }

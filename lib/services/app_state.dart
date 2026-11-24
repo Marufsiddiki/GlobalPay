@@ -298,6 +298,7 @@ class AppState extends ChangeNotifier {
         salary: worker.salary,
         salaryCurrency: 'USD',
         documents: worker.documents,
+        uploadedDocuments: worker.uploadedDocuments,
       ),
     );
     _accounts[email] = account;

@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:globalpay/models/currency.dart';
+import 'package:globalpay/models/document.dart';
 import 'package:globalpay/models/payroll_run.dart';
 import 'package:globalpay/models/worker.dart';
 import 'package:globalpay/screens/dashboard_screen.dart';
+import 'package:globalpay/screens/documents_center_screen.dart';
 import 'package:globalpay/screens/run_payroll_screen.dart';
 import 'package:globalpay/screens/worker_portal_screen.dart';
 import 'package:globalpay/services/app_state.dart';
@@ -276,5 +280,69 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('sarah@globalpay.demo'), findsNWidgets(2));
     expect(find.byType(TextField), findsNothing);
+  });
+
+  testWidgets(
+      'uploaded worker documents persist and appear to admin and worker',
+      (tester) async {
+    await state.signIn('admin@globalpay.demo', 'Admin123!');
+    await state.addWorker(
+      worker: Worker(
+        id: 'worker-doc-test',
+        name: 'Document Test',
+        email: 'document.test@example.com',
+        country: 'Bangladesh',
+        role: 'Designer',
+        engagementType: 'Contractor',
+        complianceStatus: 'Compliant',
+        salary: 1200,
+        documents: const ['National_ID.pdf'],
+        uploadedDocuments: [
+          PayrollDocument(
+            id: 'doc-test-1',
+            name: 'National_ID.pdf',
+            type: 'National ID',
+            mimeType: 'application/pdf',
+            contentBase64: base64Encode([1, 2, 3]),
+            uploadedAt: DateTime(2026, 1, 2),
+          ),
+        ],
+      ),
+      temporaryPassword: 'TempPass123!',
+    );
+
+    final reopenedState = AppState();
+    await reopenedState.initialize();
+    await reopenedState.signIn('document.test@example.com', 'TempPass123!');
+    expect(
+      reopenedState.currentWorkerProfile!.uploadedDocuments.single.name,
+      'National_ID.pdf',
+    );
+    expect(
+      reopenedState
+          .currentWorkerProfile!.uploadedDocuments.single.contentBase64,
+      base64Encode([1, 2, 3]),
+    );
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: reopenedState,
+        child: const MaterialApp(home: WorkerPortalScreen()),
+      ),
+    );
+    await tester.tap(find.text('Documents').last);
+    await tester.pumpAndSettle();
+    expect(find.text('National_ID.pdf'), findsOneWidget);
+
+    await reopenedState.signOut();
+    await reopenedState.signIn('admin@globalpay.demo', 'Admin123!');
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: reopenedState,
+        child: const MaterialApp(home: DocumentsCenterScreen()),
+      ),
+    );
+    expect(find.text('National_ID.pdf'), findsOneWidget);
+    expect(find.text('Document Test · Bangladesh'), findsOneWidget);
+    reopenedState.dispose();
   });
 }
