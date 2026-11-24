@@ -25,22 +25,7 @@ class AppScaffold extends StatelessWidget {
         actions: actions,
       ),
       body: SafeArea(child: child),
-      bottomNavigationBar: currentTab == null ? null : BottomNavigationBar(
-        currentIndex: currentTab!,
-        onTap: (index) {
-          final routes = ['/dashboard', '/workers', '/documents', '/compliance'];
-          if (index != currentTab) Navigator.pushReplacementNamed(context, routes[index]);
-        },
-        selectedItemColor: green,
-        unselectedItemColor: muted,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Workers'),
-          BottomNavigationBarItem(icon: Icon(Icons.description_outlined), label: 'Docs'),
-          BottomNavigationBarItem(icon: Icon(Icons.shield_outlined), label: 'Compliance'),
-        ],
-      ),
+      bottomNavigationBar: currentTab == null ? null : AppBottomNav(currentTab: currentTab!),
     );
   }
 }
@@ -84,7 +69,65 @@ class StatusBadge extends StatelessWidget {
 class FlagLabel extends StatelessWidget {
   final String country;
   const FlagLabel({super.key, required this.country});
-  String get flag => {'Bangladesh': '🇧🇩', 'Singapore': '🇸🇬', 'Germany': '🇩🇪', 'India': '🇮🇳', 'United States': '🇺🇸' }[country] ?? '🌐';
+  String get flag => flagEmoji(country);
   @override
   Widget build(BuildContext context) => Text('$flag  $country', style: const TextStyle(fontWeight: FontWeight.w600));
+}
+
+
+/// Bottom navigation shared by Home / Workers / Docs / Compliance tabs.
+class AppBottomNav extends StatelessWidget {
+  final int currentTab;
+  const AppBottomNav({super.key, required this.currentTab});
+
+  @override
+  Widget build(BuildContext context) {
+    return BottomNavigationBar(
+      currentIndex: currentTab,
+      onTap: (index) {
+        const routes = ['/dashboard', '/workers', '/documents', '/compliance'];
+        if (index != currentTab) Navigator.pushReplacementNamed(context, routes[index]);
+      },
+      selectedItemColor: green,
+      unselectedItemColor: muted,
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: Colors.white,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Workers'),
+        BottomNavigationBarItem(icon: Icon(Icons.description_outlined), label: 'Docs'),
+        BottomNavigationBarItem(icon: Icon(Icons.shield_outlined), label: 'Compliance'),
+      ],
+    );
+  }
+}
+
+String flagEmoji(String country) =>
+    const {'Bangladesh': '🇧🇩', 'Singapore': '🇸🇬', 'Germany': '🇩🇪', 'India': '🇮🇳', 'United States': '🇺🇸'}[country] ?? '🌐';
+
+/// Profile photo from assets/images/maruf.jpg; falls back to initials if the file is missing.
+class ProfileAvatar extends StatelessWidget {
+  final double size;
+  final String name;
+  const ProfileAvatar({super.key, required this.size, this.name = 'Md. Maruf Siddiki'});
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = name.split(' ').where((w) => w.isNotEmpty && w != 'Md.').take(2).map((w) => w[0]).join();
+    return ClipOval(
+      child: Image.asset(
+        'assets/images/maruf.jpg',
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          width: size,
+          height: size,
+          color: const Color(0xFFD6F3E8),
+          alignment: Alignment.center,
+          child: Text(initials, style: TextStyle(fontSize: size * 0.36, fontWeight: FontWeight.w800, color: green)),
+        ),
+      ),
+    );
+  }
 }

@@ -1,9 +1,6 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'firebase_options.dart';
-import 'models/worker.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/add_worker_screen.dart';
 import 'screens/analytics_screen.dart';
@@ -21,22 +18,23 @@ import 'screens/welcome_screen.dart';
 import 'screens/worker_details_screen.dart';
 import 'screens/workers_screen.dart';
 import 'services/app_state.dart';
+import 'screens/worker_portal_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(const GlobalPayApp());
+  final appState = AppState();
+  await appState.initialize();
+  runApp(GlobalPayApp(appState: appState));
 }
 
 class GlobalPayApp extends StatelessWidget {
-  const GlobalPayApp({super.key});
+  final AppState appState;
+  const GlobalPayApp({super.key, required this.appState});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AppState(),
+      create: (_) => appState,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'GlobalPay',
@@ -48,7 +46,8 @@ class GlobalPayApp extends StatelessWidget {
           inputDecorationTheme: InputDecorationTheme(
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE2E4E7)),
@@ -65,6 +64,7 @@ class GlobalPayApp extends StatelessWidget {
           '/sign-in': (_) => const SignInScreen(),
           '/sign-up': (_) => const SignUpScreen(),
           '/dashboard': (_) => const DashboardScreen(),
+          '/worker-portal': (_) => const WorkerPortalScreen(),
           '/forgot-password': (_) => const ForgotPasswordScreen(),
           '/add-worker': (_) => const AddWorkerScreen(),
           '/workers': (_) => const WorkersScreen(),
@@ -82,14 +82,3 @@ class GlobalPayApp extends StatelessWidget {
     );
   }
 }
-
-final demoWorker = Worker(
-  name: 'Md. Maruf Siddiki',
-  email: 'maruf@company.com',
-  country: 'Bangladesh',
-  role: 'Senior Developer',
-  engagementType: 'Employee',
-  complianceStatus: 'Compliant',
-  salary: 8200,
-  documents: const ['Passport.pdf', 'Tax_SG.pdf'],
-);
